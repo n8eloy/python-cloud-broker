@@ -87,7 +87,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
         elif opt == "del":
             # Updates VM
-            result = VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"client":None}},upsert=False)
+            result = VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"client": "None"}},upsert=False)
 
             if (result.modified_count > 0):
                 print(f'\n{GREEN}Recurso do provedor {provider} de ID {ident} liberado do cliente {client}{DEFAULT}')
@@ -113,7 +113,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         HDD = float(rbody["hdd"])
         price = float(rbody["price"])
         provider_server_port = str(rbody["port"])
-        provider = "http://"+str(self.client_address[0])+":"+provider_server_port
+        provider = str(self.client_address[0])+":"+provider_server_port
         client = str(rbody["client"])
 
         # Add or update VM
@@ -134,7 +134,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         ident = int(rbody["id"])
         provider_server_port = str(rbody["port"])
-        provider = "http://"+str(self.client_address[0])+":"+provider_server_port
+        provider = str(self.client_address[0])+":"+provider_server_port
 
         # Find and remove VM
         if VM_COLL.delete_one({"provider" : provider, "id" : ident, "client" : "None"}).deleted_count > 0:
