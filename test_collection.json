@@ -1,6 +1,6 @@
 [
-    {"id":1, "CPU":2, "RAM":5, "HDD":3, "price":40.90, "provider":"http://localhost:8001"},
-    {"id":3, "CPU":3, "RAM":9, "HDD":6, "price":4, "provider":"http://localhost:8002"},
-    {"id":6, "CPU":9, "RAM":2, "HDD":1, "price":30.10, "provider":"http://localhost:8002"},
-    {"id":1, "CPU":6, "RAM":8, "HDD":9, "price":35, "provider":"http://localhost:8001"}    
+    {"id":1, "cpu":2, "ram":5, "hdd":3, "price":40.90, "provider":"http://localhost:8001"},
+    {"id":3, "cpu":3, "ram":9, "hdd":6, "price":4, "provider":"http://localhost:8002"},
+    {"id":6, "cpu":9, "ram":2, "hdd":1, "price":30.10, "provider":"http://localhost:8002"},
+    {"id":1, "cpu":6, "ram":8, "hdd":9, "price":35, "provider":"http://localhost:8001"}    
 ]
