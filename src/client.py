@@ -16,7 +16,7 @@ RED = "\x1b[1;31m"
 DEFAULT = "\x1b[0m"
 
 ## Cloud Broker IP
-CB_ADDRESS = "http://54.233.252.96:8090"
+CB_ADDRESS = "http://18.228.156.230:8090"
 
 ## CLASSES ##
 
@@ -56,17 +56,17 @@ class Client:
     def useResource(self, json_resource):
         # Creates resource object
         resource = Resource(json_resource['id'], json_resource['cpu'], json_resource['ram'], json_resource['hdd'], json_resource['price'], json_resource['provider'])
-        print(f'{BLUE}[R]{DEFAULT} Conectando ao provedor para utilizar recurso')
+        print(f'{BLUE}[R]{DEFAULT} Enviando requisição ao Cloud Broker para utilizar recurso')
 
-        # Sends VM ID to provider
-        params = {'id':resource.ID}
+        # Sends VM ID to the cloud broker
+        params = {'opt':'add', 'provider':resource.provider, 'id':resource.ID}
         
-        # We're using a POST since the client is sending his information to the provider
-        response = requests.post(resource.provider, json=params)
+        # We're using a POST since the client is sending his information to cloud broker
+        response = requests.post(CB_ADDRESS, json=params)
 
         # 204: success, no content
         if response.status_code == 204:
-            print(f'{GREEN}[✓]{DEFAULT} Provedor conectado, recurso será utilizado')
+            print(f'{GREEN}[✓]{DEFAULT} Provedor {resource.provider} conectado, recurso será utilizado')
             self.resources.append(resource)
         else:
             # Unkown
@@ -76,11 +76,13 @@ class Client:
     # Stop using virtual machine
     def releaseResource(self, resource_index):
         if resource_index >= 0 and resource_index < len(self.resources):
-            # Sends VM ID to provider
-            params = {'id':self.resources[resource_index].ID}
-            # We're using a DELETE since the client is removing his bond with the provider
-            response = requests.delete(self.resources[resource_index].provider, json=params)
+            resource = self.resources[resource_index]
+            # Sends VM ID to the cloud broker
+            params = {'opt':'del', 'provider':resource.provider, 'id':resource.ID}
             
+            # We're using a POST since the client is sending his information to cloud broker
+            response = requests.post(CB_ADDRESS, json=params)
+
             # 204: success, no content
             if response.status_code == 204:
                 self.resources.pop(resource_index)

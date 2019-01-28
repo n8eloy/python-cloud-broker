@@ -61,6 +61,45 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(json_answer).encode())
         return
+    # POSTs from Client
+    def do_POST(self):
+        # Parse request body
+        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+
+        opt = str(rbody["opt"])
+        client = str(self.client_address[0])
+        ident = int(rbody["id"])
+        provider = str(rbody["provider"])
+
+        if opt == "add":
+            # Updates VM
+            result = VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"client":client}},upsert=False)
+
+            if (result.modified_count > 0):
+                print(f'\n{GREEN}Recurso do provedor {provider} de ID {ident} atribuído ao cliente {client}{DEFAULT}')
+
+                # Reply
+                self.send_response(204)
+                self.end_headers()
+            else:
+                # Not found
+                self.send_response(404)
+                self.end_headers()
+        elif opt == "del":
+            # Updates VM
+            result = VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"client":None}},upsert=False)
+
+            if (result.modified_count > 0):
+                print(f'\n{GREEN}Recurso do provedor {provider} de ID {ident} liberado do cliente {client}{DEFAULT}')
+
+                # Reply
+                self.send_response(204)
+                self.end_headers()
+            else:
+                # Not found
+                self.send_response(404)
+                self.end_headers()
+
     # PUTs from Provider
     def do_PUT(self):
         # Parse request body
@@ -84,7 +123,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Reply
         self.send_response(204)
-        self.send_header('Content-type', 'application/json')
         self.end_headers()
         return
     # DELETEs from Provider
@@ -99,16 +137,18 @@ class RequestHandler(BaseHTTPRequestHandler):
         provider = "http://"+str(self.client_address[0])+":"+provider_server_port
 
         # Find and remove VM
-        if VM_COLL.delete_one({"provider" : provider, "id" : ident}).deleted_count > 0:
+        if VM_COLL.delete_one({"provider" : provider, "id" : ident, "client" : "None"}).deleted_count > 0:
             print(f'{BLUE}Máquinas removidas{DEFAULT}')
 
             # Reply
             self.send_response(204)
+        elif VM_COLL.find({"provider" : provider, "id" : ident}).count() > 0:
+            print(f'{RED}Remoção negada: recursos em uso{DEFAULT}')
+            # Resource is being used
+            self.send_response(403)
         else:
             # Not found
             self.send_response(404)
-
-        self.send_header('Content-type', 'application/json')
         self.end_headers()
         return
 

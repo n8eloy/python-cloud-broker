@@ -22,42 +22,43 @@ RED = "\x1b[1;31m"
 DEFAULT = "\x1b[0m"
 
 ## Cloud Broker IP
-CB_ADDRESS = "http://54.233.252.96:8090"
+CB_ADDRESS = "http://18.228.156.230:8090"
 
 ## CLASSES ##
 
-class RequestHandler(BaseHTTPRequestHandler):
-    # POSTs from Client
-    def do_POST(self):
-        # Parse request body
-        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
-
-        # Updates VM status
-        ident = int(rbody["id"])
-        PROVIDER.updateClient(ident, self.client_address[0])
-
-        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} atribuído ao cliente {self.client_address[0]}')
-
-        # Reply
-        self.send_response(204)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-    # DELETEs from Client
-    def do_DELETE(self):
-        # Parse request body
-        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
-
-        # Updates VM status
-        ident = int(rbody["id"])
-        PROVIDER.updateClient(ident, None)
-
-        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} liberado')
-
-        # Reply
-        self.send_response(204)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-
+#class RequestHandler(BaseHTTPRequestHandler):
+#    # POSTs from CB
+#    def do_POST(self):
+#        # Parse request body
+#        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+#
+#        # Updates VM status
+#        client = str(rbody["client"])
+#        ident = int(rbody["id"])
+#        PROVIDER.updateClient(ident, client)
+#
+#        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} atribuído ao cliente {client}')
+#
+#        # Reply
+#        self.send_response(204)
+#        self.send_header('Content-type', 'application/json')
+#        self.end_headers()
+#    # DELETEs from CB
+#    def do_DELETE(self):
+#        # Parse request body
+#        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+#
+#        # Updates VM status
+#        client = str(rbody["client"])
+#        ident = int(rbody["id"])
+#        PROVIDER.updateClient(ident, None)
+#
+#        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} liberado')
+#
+#        # Reply
+#        self.send_response(204)
+#        self.send_header('Content-type', 'application/json')
+#        self.end_headers()
 
 class Resource:
     def __init__(self, int_ID, int_CPU, float_RAM, float_HDD, float_price_hour):
@@ -146,10 +147,12 @@ class Provider():
                 params = {'port' : self.port, 'id' : resource_id}
                 response = requests.delete(CB_ADDRESS, json=params)
 
-                # 204: success, no content
+                # 204: success, no content, 403: forbidden, resource is busy
                 if response.status_code == 204:
                     self.resources.pop(resource_index)
                     print(f'{GREEN}[✓]{DEFAULT} Recurso #{resource_index} removido')
+                elif response.status_code == 403:
+                    print(f'{YELLOW}[!]{DEFAULT} Recurso sendo utilizado')
                 else:
                     print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
             else:
@@ -181,12 +184,12 @@ def isInt(var):
     except (ValueError, TypeError):
         return False
 
-def serverThread(port, server_class=HTTPServer, handler_class=RequestHandler):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-
-    print(f'Servidor HTTP iniciando na porta {port}')
-    httpd.serve_forever()
+#def serverThread(port, server_class=HTTPServer, handler_class=RequestHandler):
+#    server_address = ('', port)
+#    httpd = server_class(server_address, handler_class)
+#
+#    print(f'Servidor HTTP iniciando na porta {port}')
+#    httpd.serve_forever()
 
 def run():
     global PROVIDER
@@ -199,8 +202,8 @@ def run():
 
     PROVIDER = Provider(port)
 
-    # Calls request handler thread
-    threading.Thread(target=serverThread, args=[port], daemon=True).start()
+    ## Calls request handler thread
+    #threading.Thread(target=serverThread, args=[port], daemon=True).start()
 
     # Receives input
     while True:
