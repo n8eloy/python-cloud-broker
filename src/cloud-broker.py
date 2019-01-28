@@ -44,7 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         # Not enough VMs
         if query.count() < amount:
-            print(f'{RED}Não existem VMS o suficiente para o pedido{DEFAULT}')
+            print(f'{RED}Não existem VMs o suficiente para o pedido{DEFAULT}')
             self.send_response(404)
             self.end_headers()
             return
