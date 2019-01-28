@@ -36,12 +36,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         print(f'{BLUE}Buscando matching{DEFAULT}')
 
         amount = int(rbody["amount"])
-        CPU = int(rbody["CPU"])
-        RAM = float(rbody["RAM"])
-        HDD = float(rbody["HDD"])
+        CPU = int(rbody["cpu"])
+        RAM = float(rbody["ram"])
+        HDD = float(rbody["hdd"])
 
         # Query for VMs
-        query = VM_COLL.find({"CPU":{"$gte": CPU},"RAM":{"$gte": RAM},"HDD":{"$gte": HDD}}, {'_id': False}).sort("price",1)
+        query = VM_COLL.find({"cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort("price",1)
         
         # Not enough VMs
         if query.count() < amount:
@@ -64,9 +64,52 @@ class RequestHandler(BaseHTTPRequestHandler):
         return
     # PUTs from Provider
     def do_PUT(self):
+        # Parse request body
+        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+
+        print(f'\n"{self.client_address}" está adicionando {rbody}')
+        
+        ident = int(rbody["id"])
+        CPU = int(rbody["cpu"])
+        RAM = float(rbody["ram"])
+        HDD = float(rbody["hdd"])
+        price = float(rbody["price"])
+        provider_server_port = str(rbody["port"])
+        provider = "http://"+str(self.client_address[0])+":"+provider_server_port
+
+        # Add VM
+        VM_COLL.insert_one({"id":ident, "cpu":CPU, "ram":RAM, "hdd":HDD, "price":price, "provider":provider})
+
+        print(f'{BLUE}Máquinas registradas{DEFAULT}')
+
+        # Reply
+        self.send_response(204)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
         return
     # DELETEs from Provider
     def do_DELETE(self):
+        # Parse request body
+        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+
+        print(f'\n"{self.client_address}" está removendo {rbody}')
+        
+        ident = int(rbody["id"])
+        provider_server_port = str(rbody["port"])
+        provider = "http://"+str(self.client_address[0])+":"+provider_server_port
+
+        # Find and remove VM
+        if VM_COLL.delete_one({"provider" : provider, "id" : ident}).deleted_count > 0:
+            print(f'{BLUE}Máquinas removidas{DEFAULT}')
+
+            # Reply
+            self.send_response(204)
+        else:
+            # Not found
+            self.send_response(404)
+
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
         return
 
 ## METHODS ##
