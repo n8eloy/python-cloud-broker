@@ -29,13 +29,6 @@ class Resource:
         self.RAM = float_RAM
         self.HDD = float_HDD
         self.price = float_price_hour
-        self.client = None
-
-    def setClient(self, client_IP):
-        self.client = client_IP
-
-    def hasClient(self):
-        return True if self.client != None else False
 
 class Provider():
     def __init__(self, port):
@@ -48,37 +41,17 @@ class Provider():
             print(f'\n{CYAN}[i]{DEFAULT} Recursos cadastrados:')
 
             # Formatting and printing
-            print(f'{CYAN}#\tCliente                  \tID \tvCPUs     \tRAM (GBs) \tHDD (GBs) \tPreço/Hora (R$)')
+            print(f'{CYAN}#\tID \tvCPUs     \tRAM (GBs) \tHDD (GBs) \tPreço/Hora (R$)')
             for i,r in enumerate(self.resources):
                 vmid = r.ID
-                client = fillString(str(r.client), 25)
                 CPU = fillString(str(r.CPU), 10)
                 RAM = fillString(str(r.RAM), 10)
                 HDD = fillString(str(r.HDD), 10)
                 price = r.price
 
-                print(f'{CYAN}{i}{DEFAULT}\t{client}\t{vmid}\t{CPU}\t{RAM}\t{HDD}\t{price}')
+                print(f'{CYAN}{i}{DEFAULT}\t{vmid}\t{CPU}\t{RAM}\t{HDD}\t{price}')
         else:
             print(f'{YELLOW}[!]{DEFAULT} Nenhum recurso está cadastrado no momento')
-
-    # Updates a resource status
-    def updateClient(self, resource_id, client_IP):
-        for r in self.resources:
-            if r.ID == resource_id:
-                # Updates CB
-                params = {'port' : self.port, 'id' : str(r.ID), 'cpu' : str(r.CPU), 'ram' : str(r.RAM), 'hdd' : str(r.HDD), 'price' : str(r.price), 'client': str(client_IP)}
-
-                response = requests.put(CB_ADDRESS, json=params)
-
-                # 204: success, no content
-                if response.status_code == 204:
-                    print(f'{GREEN}[✓]{DEFAULT} Recurso #{r.ID} atualizado')
-                else:
-                    print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
-                    break
-
-                r.setClient(client_IP)
-                return
 
     # Register new resource
     def registerResource(self, int_amount, int_CPU, float_RAM, float_HDD, float_price):
@@ -88,7 +61,7 @@ class Provider():
             resource = Resource(RES_ID, int_CPU, float_RAM, float_HDD, float_price)
             self.resources.append(resource)
 
-            params = {'port' : self.port, 'id' : str(resource.ID), 'cpu' : str(resource.CPU), 'ram' : str(resource.RAM), 'hdd' : str(resource.HDD), 'price' : str(resource.price), 'client': None}
+            params = {'port' : self.port, 'id' : str(resource.ID), 'cpu' : str(resource.CPU), 'ram' : str(resource.RAM), 'hdd' : str(resource.HDD), 'price' : str(resource.price), 'client': "None"}
             response = requests.put(CB_ADDRESS, json=params)
 
             # 204: success, no content
@@ -103,22 +76,19 @@ class Provider():
     # Removes a resource
     def removeResource(self, resource_index):
         if resource_index >= 0 and resource_index < len(self.resources):
-            if not self.resources[resource_index].hasClient():
-                resource_id = self.resources[resource_index].ID
+            resource_id = self.resources[resource_index].ID
 
-                params = {'port' : self.port, 'id' : resource_id}
-                response = requests.delete(CB_ADDRESS, json=params)
+            params = {'port' : self.port, 'id' : resource_id}
+            response = requests.delete(CB_ADDRESS, json=params)
 
-                # 204: success, no content, 403: forbidden, resource is busy
-                if response.status_code == 204:
-                    self.resources.pop(resource_index)
-                    print(f'{GREEN}[✓]{DEFAULT} Recurso #{resource_index} removido')
-                elif response.status_code == 403:
-                    print(f'{YELLOW}[!]{DEFAULT} Recurso sendo utilizado')
-                else:
-                    print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
+            # 204: success, no content, 403: forbidden, resource is busy
+            if response.status_code == 204:
+                self.resources.pop(resource_index)
+                print(f'{GREEN}[✓]{DEFAULT} Recurso #{resource_index} removido')
+            elif response.status_code == 403:
+                print(f'{YELLOW}[!]{DEFAULT} Recurso sendo utilizado')
             else:
-                print(f'{YELLOW}[!]{DEFAULT} Recurso #{resource_index} está sendo utilizado por um cliente')
+                print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
         else:
             print(f'{YELLOW}[!]{DEFAULT} O recurso desejado não existe')
 
