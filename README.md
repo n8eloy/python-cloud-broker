@@ -12,4 +12,5 @@ Using [AWS](https://aws.amazon.com/). Public IP is `54.233.252.96`. Currently us
 
 ## Misc Details
 This project represents a minimal RESTful Cloud Broker for Virtual Machines.
+
 Both Cloud Broker and Provider must act as HTTP Servers - Cloud Broker for receiving HTTP requests from both Client (VM request) and Provider (VM update), and Provider for receiving HTTP requests from Client (VM usage).
