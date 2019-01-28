@@ -43,10 +43,10 @@ class Client:
             print(f'{CYAN}#\tProvedor                 \tID \tvCPUs     \tRAM (GBs) \tHDD (GBs) \tPreço/Hora (R$)')
             for i,r in enumerate(self.resources):
                 vmid = r.ID
-                provider = fillString(r.provider, 25)
-                CPU = fillString(r.CPU, 10)
-                RAM = fillString(r.RAM, 10)
-                HDD = fillString(r.HDD, 10)
+                provider = fillString(str(r.provider), 25)
+                CPU = fillString(str(r.CPU), 10)
+                RAM = fillString(str(r.RAM), 10)
+                HDD = fillString(str(r.HDD), 10)
                 price = r.price
 
                 print(f'{CYAN}{i}{DEFAULT}\t{provider}\t{vmid}\t{CPU}\t{RAM}\t{HDD}\t{price}')
@@ -56,11 +56,11 @@ class Client:
     # For using virtual machines
     def useResource(self, json_resource):
         # Creates resource object
-        resource = Resource(json_resource['id'], json_resource['CPU'], json_resource['RAM'], json_resource['HDD'], json_resource['price'], json_resource['provider'])
+        resource = Resource(json_resource['id'], json_resource['cpu'], json_resource['ram'], json_resource['hdd'], json_resource['price'], json_resource['provider'])
         print(f'{BLUE}[R]{DEFAULT} Conectando ao provedor para utilizar recurso')
 
         # Sends VM ID to provider
-        params = {'ID':resource.ID}
+        params = {'id':resource.ID}
         
         # We're using a POST since the client is sending his information to the provider
         response = requests.put(resource.provider, params=params)
@@ -78,14 +78,14 @@ class Client:
     def releaseResource(self, resource_index):
         if resource_index >= 0 and resource_index < len(self.resources):
             # Sends VM ID to provider
-            params = {'ID':self.resources[resource_index].ID}
+            params = {'id':self.resources[resource_index].ID}
             # We're using a DELETE since the client is removing his bond with the provider
             response = requests.delete(self.resources[resource_index].provider, params=params)
             
             # 204: success, no content
             if response.status_code == 204:
                 self.resources.pop(resource_index)
-                print(f'Recurso #{resource_index} liberado')
+                print(f'{GREEN}[✓]{DEFAULT} Recurso #{resource_index} liberado')
             else:
                 # Unkown
                 print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
@@ -96,12 +96,7 @@ class Client:
     def requestResource(self, int_amount, int_CPU, float_RAM, float_HDD):
         # Params for GET
 
-        # All VMs are equal, so there's no need for this
-        # params = []
-        #for i in range(int_amount):
-        #    params.append({'CPU' : str(int_CPU), 'RAM' : str(float_RAM) , 'HDD' : str(float_HDD)})
-        
-        params = {'amount': str(int_amount), 'CPU' : str(int_CPU), 'RAM' : str(float_RAM) , 'HDD' : str(float_HDD)}
+        params = {'amount': str(int_amount), 'cpu' : str(int_CPU), 'ram' : str(float_RAM) , 'hdd' : str(float_HDD)}
         response = requests.get(CB_ADDRESS, json=params)
 
         # 200: OK, 404: not found, 5XX: server error
@@ -117,9 +112,9 @@ class Client:
             for i,r in enumerate(json_data):
                 vmid = r["id"]
                 provider = fillString(str(r["provider"]), 25)
-                CPU = fillString(str(r["CPU"]), 10)
-                RAM = fillString(str(r["RAM"]), 10)
-                HDD = fillString(str(r["HDD"]), 10)
+                CPU = fillString(str(r["cpu"]), 10)
+                RAM = fillString(str(r["ram"]), 10)
+                HDD = fillString(str(r["hdd"]), 10)
                 price = str(r["price"])
 
                 print(f'{CYAN}{i}{DEFAULT}\t{provider}\t{vmid}\t{CPU}\t{RAM}\t{HDD}\t{price}')
@@ -145,9 +140,9 @@ class Client:
 ## METHODS ##
 
 def fillString(string, size):
-    if len(string) > size:
+    if string != None and len(string) > size:
         string = string[:size - 3] + ".."
-    elif len(string) < size:
+    elif string != None and len(string) < size:
         string = string + (' ' * (size - len(string)))
     return string
 
