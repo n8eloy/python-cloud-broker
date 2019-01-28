@@ -64,10 +64,13 @@ class Client:
         # We're using a POST since the client is sending his information to cloud broker
         response = requests.post(CB_ADDRESS, json=params)
 
-        # 204: success, no content
+        # 204: success, no content, 403: someone took the resource first
         if response.status_code == 204:
             print(f'{GREEN}[✓]{DEFAULT} Provedor {resource.provider} conectado, recurso será utilizado')
             self.resources.append(resource)
+        elif response.status_code == 403:
+            # Another client took the VMs during decision
+            print(f'{YELLOW}[!]{DEFAULT} Recurso foi alocado para outro cliente. Tente buscar novamente')
         else:
             # Unkown
             print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
@@ -100,7 +103,7 @@ class Client:
         params = {'amount': str(int_amount), 'cpu' : str(int_CPU), 'ram' : str(float_RAM) , 'hdd' : str(float_HDD)}
         response = requests.get(CB_ADDRESS, json=params)
 
-        # 200: OK, 404: not found, 5XX: server error
+        # 200: OK, 404: not found
         if response.status_code == 200:
             # Found matching provider
             print(f'{GREEN}[✓]{DEFAULT} Máquinas encontradas:')
@@ -131,9 +134,6 @@ class Client:
         elif response.status_code == 404:
             # No match found
             print(f'{YELLOW}[!]{DEFAULT} Não foram econtradas máquinas virtuais qualificadas para atender ao pedido')
-        elif response.status_code >= 500 and response.status_code <= 599:
-            # Server error
-            print(f'{RED}[X]{DEFAULT} Erro interno')
         else:
             # Unkown
             print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
