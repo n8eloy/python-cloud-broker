@@ -16,7 +16,7 @@ RED = "\x1b[1;31m"
 DEFAULT = "\x1b[0m"
 
 ## Cloud Broker IP
-CB_ADDRESS = "http://localhost:8090"
+CB_ADDRESS = "http://54.233.252.96:8090"
 
 ## CLASSES ##
 
