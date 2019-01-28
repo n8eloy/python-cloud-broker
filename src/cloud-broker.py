@@ -40,7 +40,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         HDD = float(rbody["hdd"])
 
         # Query for VMs
-        query = VM_COLL.find({"client":"None","cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort([["price", 1], ["hdd", -1], ["ram", -1], ["cpu", -1]])
+        query = VM_COLL.find({"client":"None","cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort([["price", 1], ["cpu", -1], ["ram", -1], ["hdd", -1]])
         
         # Not enough VMs
         if query.count() < amount:
