@@ -4,10 +4,6 @@
 # Victor Hide Watanabe      726591
 
 import requests
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import socketserver
-import json
-import threading
 
 ## GLOBALS ##
 
@@ -25,40 +21,6 @@ DEFAULT = "\x1b[0m"
 CB_ADDRESS = "http://18.228.156.230:8090"
 
 ## CLASSES ##
-
-#class RequestHandler(BaseHTTPRequestHandler):
-#    # POSTs from CB
-#    def do_POST(self):
-#        # Parse request body
-#        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
-#
-#        # Updates VM status
-#        client = str(rbody["client"])
-#        ident = int(rbody["id"])
-#        PROVIDER.updateClient(ident, client)
-#
-#        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} atribuído ao cliente {client}')
-#
-#        # Reply
-#        self.send_response(204)
-#        self.send_header('Content-type', 'application/json')
-#        self.end_headers()
-#    # DELETEs from CB
-#    def do_DELETE(self):
-#        # Parse request body
-#        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
-#
-#        # Updates VM status
-#        client = str(rbody["client"])
-#        ident = int(rbody["id"])
-#        PROVIDER.updateClient(ident, None)
-#
-#        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} liberado')
-#
-#        # Reply
-#        self.send_response(204)
-#        self.send_header('Content-type', 'application/json')
-#        self.end_headers()
 
 class Resource:
     def __init__(self, int_ID, int_CPU, float_RAM, float_HDD, float_price_hour):
@@ -184,13 +146,6 @@ def isInt(var):
     except (ValueError, TypeError):
         return False
 
-#def serverThread(port, server_class=HTTPServer, handler_class=RequestHandler):
-#    server_address = ('', port)
-#    httpd = server_class(server_address, handler_class)
-#
-#    print(f'Servidor HTTP iniciando na porta {port}')
-#    httpd.serve_forever()
-
 def run():
     global PROVIDER
     print(f'{CYAN}[i]{DEFAULT} Inicializando provedor')
@@ -201,9 +156,6 @@ def run():
     port = int(port)
 
     PROVIDER = Provider(port)
-
-    ## Calls request handler thread
-    #threading.Thread(target=serverThread, args=[port], daemon=True).start()
 
     # Receives input
     while True:
