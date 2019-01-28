@@ -130,7 +130,7 @@ class Client:
                     self.useResource(r)
         elif response.status_code == 404:
             # No match found
-            print(f'{YELLOW}[!]{DEFAULT} Não foram econtradas máquinas virtuais o suficiente para atender à demanda')
+            print(f'{YELLOW}[!]{DEFAULT} Não foram econtradas máquinas virtuais qualificadas para atender ao pedido')
         elif response.status_code >= 500 and response.status_code <= 599:
             # Server error
             print(f'{RED}[X]{DEFAULT} Erro interno')

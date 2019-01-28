@@ -44,7 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         # Not enough VMs
         if query.count() < amount:
-            print(f'{RED}Não existem VMs o suficiente para o pedido{DEFAULT}')
+            print(f'{RED}Não existem VMs qualificadas para atender ao pedido{DEFAULT}')
             self.send_response(404)
             self.end_headers()
             return
@@ -119,7 +119,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Add or update VM
         VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"id":ident, "cpu":CPU, "ram":RAM, "hdd":HDD, "price":price, "provider":provider, "client":client}},upsert=True)
 
-        print(f'{BLUE}Máquinas registradas{DEFAULT}')
+        print(f'{BLUE}Máquina registrada{DEFAULT}')
 
         # Reply
         self.send_response(204)
