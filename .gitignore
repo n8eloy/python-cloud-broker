@@ -1,0 +1,6 @@
+# Key files
+*.ppk
+*.sem
+
+# Misc
+.vscode
