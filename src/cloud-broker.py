@@ -5,7 +5,6 @@
 
 from pymongo import MongoClient
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from urllib.parse import urlparse, parse_qs
 import socketserver
 import json
 
@@ -41,7 +40,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         HDD = float(rbody["hdd"])
 
         # Query for VMs
-        query = VM_COLL.find({"cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort("price",1)
+        query = VM_COLL.find({"client":"None","cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort("price",1)
         
         # Not enough VMs
         if query.count() < amount:
@@ -67,7 +66,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Parse request body
         rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
 
-        print(f'\n"{self.client_address}" está adicionando {rbody}')
+        print(f'\n"{self.client_address}" está adicionando ou atualizando {rbody}')
         
         ident = int(rbody["id"])
         CPU = int(rbody["cpu"])
@@ -76,9 +75,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         price = float(rbody["price"])
         provider_server_port = str(rbody["port"])
         provider = "http://"+str(self.client_address[0])+":"+provider_server_port
+        client = str(rbody["client"])
 
-        # Add VM
-        VM_COLL.insert_one({"id":ident, "cpu":CPU, "ram":RAM, "hdd":HDD, "price":price, "provider":provider})
+        # Add or update VM
+        VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"id":ident, "cpu":CPU, "ram":RAM, "hdd":HDD, "price":price, "provider":provider, "client":client}},upsert=True)
 
         print(f'{BLUE}Máquinas registradas{DEFAULT}')
 

@@ -4,7 +4,6 @@
 # Victor Hide Watanabe      726591
 
 import requests
-import textwrap
 
 ## GLOBALS ##
 
@@ -63,7 +62,7 @@ class Client:
         params = {'id':resource.ID}
         
         # We're using a POST since the client is sending his information to the provider
-        response = requests.put(resource.provider, params=params)
+        response = requests.post(resource.provider, json=params)
 
         # 204: success, no content
         if response.status_code == 204:
@@ -80,7 +79,7 @@ class Client:
             # Sends VM ID to provider
             params = {'id':self.resources[resource_index].ID}
             # We're using a DELETE since the client is removing his bond with the provider
-            response = requests.delete(self.resources[resource_index].provider, params=params)
+            response = requests.delete(self.resources[resource_index].provider, json=params)
             
             # 204: success, no content
             if response.status_code == 204:

@@ -3,10 +3,11 @@
 # Nathan Eloy de Miranda    726575
 # Victor Hide Watanabe      726591
 
+import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socketserver
-import requests
-
+import json
+import threading
 
 ## GLOBALS ##
 
@@ -24,6 +25,39 @@ DEFAULT = "\x1b[0m"
 CB_ADDRESS = "http://localhost:8090"
 
 ## CLASSES ##
+
+class RequestHandler(BaseHTTPRequestHandler):
+    # POSTs from Client
+    def do_POST(self):
+        # Parse request body
+        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+
+        # Updates VM status
+        ident = int(rbody["id"])
+        PROVIDER.updateClient(ident, self.client_address[0])
+
+        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} atribuído ao cliente {self.client_address[0]}')
+
+        # Reply
+        self.send_response(204)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+    # DELETEs from Client
+    def do_DELETE(self):
+        # Parse request body
+        rbody = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
+
+        # Updates VM status
+        ident = int(rbody["id"])
+        PROVIDER.updateClient(ident, None)
+
+        print(f'\n{CYAN}[i]{DEFAULT} Recurso de ID {ident} liberado')
+
+        # Reply
+        self.send_response(204)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+
 
 class Resource:
     def __init__(self, int_ID, int_CPU, float_RAM, float_HDD, float_price_hour):
@@ -64,6 +98,25 @@ class Provider():
         else:
             print(f'{YELLOW}[!]{DEFAULT} Nenhum recurso está cadastrado no momento')
 
+    # Updates a resource status
+    def updateClient(self, resource_id, client_IP):
+        for r in self.resources:
+            if r.ID == resource_id:
+                # Updates CB
+                params = {'port' : self.port, 'id' : str(r.ID), 'cpu' : str(r.CPU), 'ram' : str(r.RAM), 'hdd' : str(r.HDD), 'price' : str(r.price), 'client': str(client_IP)}
+
+                response = requests.put(CB_ADDRESS, json=params)
+
+                # 204: success, no content
+                if response.status_code == 204:
+                    print(f'{GREEN}[✓]{DEFAULT} Recurso #{r.ID} atualizado')
+                else:
+                    print(f'{RED}[X]{DEFAULT} Erro {response.status_code}')
+                    break
+
+                r.setClient(client_IP)
+                return
+
     # Register new resource
     def registerResource(self, int_amount, int_CPU, float_RAM, float_HDD, float_price):
         global RES_ID
@@ -72,7 +125,7 @@ class Provider():
             resource = Resource(RES_ID, int_CPU, float_RAM, float_HDD, float_price)
             self.resources.append(resource)
 
-            params = {'port' : self.port, 'id' : str(resource.ID), 'cpu' : str(resource.CPU), 'ram' : str(resource.RAM), 'hdd' : str(resource.HDD), 'price' : str(resource.price)}
+            params = {'port' : self.port, 'id' : str(resource.ID), 'cpu' : str(resource.CPU), 'ram' : str(resource.RAM), 'hdd' : str(resource.HDD), 'price' : str(resource.price), 'client': None}
             response = requests.put(CB_ADDRESS, json=params)
 
             # 204: success, no content
@@ -87,7 +140,7 @@ class Provider():
     # Removes a resource
     def removeResource(self, resource_index):
         if resource_index >= 0 and resource_index < len(self.resources):
-            if self.resources[resource_index].client == None:
+            if not self.resources[resource_index].hasClient():
                 resource_id = self.resources[resource_index].ID
 
                 params = {'port' : self.port, 'id' : resource_id}
@@ -128,6 +181,13 @@ def isInt(var):
     except (ValueError, TypeError):
         return False
 
+def serverThread(port, server_class=HTTPServer, handler_class=RequestHandler):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+
+    print(f'Servidor HTTP iniciando na porta {port}')
+    httpd.serve_forever()
+
 def run():
     global PROVIDER
     print(f'{CYAN}[i]{DEFAULT} Inicializando provedor')
@@ -138,6 +198,9 @@ def run():
     port = int(port)
 
     PROVIDER = Provider(port)
+
+    # Calls request handler thread
+    threading.Thread(target=serverThread, args=[port], daemon=True).start()
 
     # Receives input
     while True:
