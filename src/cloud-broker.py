@@ -40,7 +40,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         HDD = float(rbody["hdd"])
 
         # Query for VMs
-        query = VM_COLL.find({"client":"None","cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort("price",1)
+        query = VM_COLL.find({"client":"None","cpu":{"$gte": CPU},"ram":{"$gte": RAM},"hdd":{"$gte": HDD}}, {'_id': False}).sort([["price", 1], ["hdd", -1], ["ram", -1], ["cpu", -1]])
         
         # Not enough VMs
         if query.count() < amount:
@@ -73,13 +73,18 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if opt == "add":
             # Updates VM
-            result = VM_COLL.update_one({"provider":provider,"id":ident},{"$set": {"client":client}},upsert=False)
+            result = VM_COLL.update_one({"provider":provider,"id":ident,"client":"None"},{"$set": {"client":client}},upsert=False)
 
             if (result.modified_count > 0):
                 print(f'\n{GREEN}Recurso do provedor {provider} de ID {ident} atribuído ao cliente {client}{DEFAULT}')
 
                 # Reply
                 self.send_response(204)
+                self.end_headers()
+            elif VM_COLL.find({"provider" : provider, "id" : ident}).count() > 0:
+                print(f'\n{RED}Recurso já sendo utilizado{DEFAULT}')
+                # Too late - another client took the resource
+                self.send_response(403)
                 self.end_headers()
             else:
                 # Not found
