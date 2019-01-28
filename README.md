@@ -15,4 +15,6 @@ To transfer _cloud-broker.py_ to cloud, use `pscp -i [.ppk PRIVATE KEY LOCATION]
 ## Misc Details
 This project represents a minimal RESTful Cloud Broker for Virtual Machines.
 
+Cloud Broker uses `virtual_machines` collection within `provider_data` database.
+
 Both Cloud Broker and Provider must act as HTTP Servers - Cloud Broker for receiving HTTP requests from both Client (VM request) and Provider (VM update), and Provider for receiving HTTP requests from Client (VM usage).
